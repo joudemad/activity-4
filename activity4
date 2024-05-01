@@ -1,10 +1,12 @@
 import csv
 
+
 class Article:
     def __init__(self, name, price, quantity):
         self.name = name
         self.price = price
         self.quantity = quantity
+
 
 class ShoppingCart:
     def __init__(self):
@@ -13,10 +15,9 @@ class ShoppingCart:
 
     def load_inventory(self, filename):
         with open(filename, 'r') as file:
-            reader = csv.reader(file)
+            reader = csv.DictReader(file)
             for row in reader:
-                name, price, quantity = row
-                self.inventory[name] = Article(name, float(price), int(quantity))
+                self.inventory[row['name']] = Article(row['name'], float(row['price']), int(row['quantity']))
 
     def list_products(self):
         print("Product\t\tPrice\t\tQuantity")
@@ -24,22 +25,20 @@ class ShoppingCart:
             print(product + "\t\t$" + str(article.price) + "\t\t" + str(article.quantity))
 
     def add_to_cart(self, product, quantity):
-        if product in self.inventory:
-            if self.inventory[product].quantity >= quantity:
-                if product in self.cart:
-                    self.cart[product]['quantity'] += quantity
-                else:
-                    self.cart[product] = {'price': self.inventory[product].price, 'quantity': quantity}
-                self.inventory[product].quantity -= quantity
+        inventory_article = self.inventory.get(product, Article('', 0, 0))
+        if inventory_article.quantity >= quantity:
+            if product in self.cart:
+                self.cart[product]['quantity'] += quantity
             else:
-                print("Not enough quantity available.")
+                self.cart[product] = {'price': inventory_article.price, 'quantity': quantity}
+            inventory_article.quantity -= quantity
         else:
-            print("Product not found in inventory.")
+            print("Not enough quantity available.")
 
     def remove_from_cart(self, product):
         if product in self.cart:
             self.inventory[product].quantity += self.cart[product]['quantity']
-            del self.cart[product]
+            self.cart.pop(product)
         else:
             print("Product not found in cart.")
 
@@ -80,7 +79,4 @@ if __name__ == "__main__":
             product = input("Enter product name: ").strip().lower()
             shopping_cart.remove_from_cart(product)
         elif command == "checkout":
-            shopping_cart.checkout()
-            break
-        else:
-            print("Invalid command. Please try again.")
+            shopping_
